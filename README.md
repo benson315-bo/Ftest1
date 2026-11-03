@@ -1,308 +1,361 @@
-# STM32 LED 警報解除模擬系統
+# 30 秒警報解除模擬系統（NUCLEO-G474RE 期中專題）
 
-## 📌 一、專題介紹
+利用 STM32、LED、蜂鳴器及 Python 密碼輸入，模擬一套具有倒數計時、警報升級與緊急停止功能的電子控制系統。
 
-本專題使用 **STM32 NUCLEO-G474RE 開發板**，透過 C 語言與 HAL 函式庫，設計一套具備倒數計時、密碼驗證、LED 警示及蜂鳴器的警報解除模擬系統。
+## 1. 情境故事：誰、在哪、遇到什麼麻煩
 
-系統啟動後立即開始 30 秒倒數，使用者需要透過電腦上的 Python 程式輸入正確密碼解除警報。
+在電子實習課的模擬情境中，玩家需要在 30 秒內解除警報。
 
-輸入錯誤密碼時，系統會提高 LED 閃爍速度與呼吸燈亮度，模擬警報逐漸升級的效果。
+系統啟動後，兩顆 LED 開始閃爍與呼吸，代表警報正在倒數。玩家必須透過電腦輸入正確密碼。
 
-如果倒數時間結束或連續輸入 5 次錯誤密碼，系統將進入失敗鎖定狀態，LED 全亮且蜂鳴器響起 2 秒。
+如果輸入錯誤，LED 閃爍速度會加快、呼吸燈亮度提高，營造越來越緊迫的效果。
 
-另外設置 PC13 緊急停止按鈕，讓使用者可以隨時停止系統。
+如果倒數結束或輸入錯誤達 5 次，系統進入失敗鎖定狀態，兩顆 LED 全亮，蜂鳴器發出 2 秒警報聲。
 
----
+此外，設置 PC13 緊急停止按鈕，可以隨時停止系統，確保操作安全。
 
-## 🛠️ 二、開發環境
+## 2. 替身對照：故事裡的模組 → 板上替身
+
+| 故事中的設備 | 實際使用硬體 | 功能 |
+|---|---|---|
+| 警示燈 | PC8 LED | 閃爍表示警報啟動 |
+| 警報強度顯示 | PC6 PWM LED | 隨錯誤次數增加亮度 |
+| 警報聲 | PB1 有源蜂鳴器 | 失敗時鳴叫 2 秒 |
+| 密碼輸入器 | Python 命令列 | 輸入密碼並透過 UART 傳送 |
+| 緊急停止開關 | PC13 板載 B1 按鈕 | 立即停止所有輸出 |
+| 玩家控制按鈕 | PB0、PC7 | 預留玩家互動功能 |
+| 倒數顯示器 | Python 終端機 | 顯示剩餘時間與錯誤次數 |
+
+本專題使用 LED、蜂鳴器與程式狀態機模擬警報系統，不涉及真實危險裝置。
+
+## 3. 功能與驗收條件：動作、預期、實測結果
+
+| 測試動作 | 預期結果 | 目前實測 |
+|---|---|---|
+| STM32 開機 | 開始 30 秒倒數 | 待補紀錄 |
+| PC8 主 LED | 每 500ms 翻轉一次 | 待補紀錄 |
+| PC6 呼吸 LED | 逐漸變亮、變暗 | 待補紀錄 |
+| 錯誤密碼 1 次 | 閃爍間隔改為 400ms | 待補紀錄 |
+| 錯誤密碼 2 次 | 閃爍間隔改為 300ms | 待補紀錄 |
+| 錯誤密碼 3 次 | 閃爍間隔改為 200ms | 待補紀錄 |
+| 錯誤密碼 4 次 | 閃爍間隔改為 100ms | 待補紀錄 |
+| 錯誤密碼 5 次 | 系統鎖定、蜂鳴器響 2 秒 | 修正後待重新測試 |
+| 30 秒結束 | LED 全亮、蜂鳴器響 2 秒 | 已確認蜂鳴器正常響 2 秒 |
+| 輸入正確密碼 | 停止倒數，關閉全部輸出 | 待補紀錄 |
+| 失敗後輸入正確密碼 | 無法解除鎖定 | 待補紀錄 |
+| 按下 PC13 | 立即停止倒數、LED 與蜂鳴器 | 待補紀錄 |
+
+### 第三者測試
+
+測試者不需要事先了解程式碼，只需要：
+
+1. 依照 README 完成硬體接線與程式燒錄。
+2. 開啟 Python 命令列控制程式。
+3. 連接 ST-LINK 虛擬 COM 埠。
+4. 重新啟動 STM32。
+5. 分別測試正確密碼、五次錯誤密碼、30 秒超時及 PC13 停止功能。
+6. 將實際結果填入上方驗收表。
+
+## 4. 用到的技術：第 3～7 週勾選表
+
+以下列出專題使用的技術，實際週次依課程投影片對照。
+
+- [x] GPIO 輸入與輸出
+- [x] EXTI 外部中斷
+- [x] TIM3 計時器
+- [x] PWM 脈波寬度調變
+- [x] LPUART1 序列通訊
+- [x] UART 接收中斷
+- [x] HAL 函式庫
+- [x] HAL_GetTick() 非阻塞計時
+- [x] Python 與 pyserial 通訊
+- [x] 狀態機控制
+- [ ] ADC 類比數位轉換（未使用）
+- [ ] I2C / SPI 通訊（未使用）
+
+### 技術說明
+
+**GPIO：** 控制 LED、蜂鳴器及讀取玩家按鈕。
+
+**EXTI：** PC13 偵測緊急停止，並立即執行關閉輸出動作。
+
+**TIM3 PWM：** 控制呼吸 LED 亮度，實現平滑的呼吸效果。
+
+**LPUART1：** 建立 STM32 與 Python 之間的雙向通訊。
+
+**HAL_GetTick()：** 實作 30 秒倒數、LED 閃爍及蜂鳴器 2 秒計時，避免阻塞主迴圈。
+
+## 5. 腳位表：用到的每支腳與用途
+
+| MCU 腳位 | 使用功能 | CubeMX 設定 |
+|---|---|---|
+| PC8 | 主 LED | GPIO_Output |
+| PC6 | 呼吸 LED | TIM3_CH1 / AF2 |
+| PB1 | 有源蜂鳴器 | GPIO_Output |
+| PC13 | 緊急停止 | GPIO_EXTI13 |
+| PB0 | 玩家 1 按鈕 | GPIO_Input / Pull-up |
+| PC7 | 玩家 2 按鈕 | GPIO_Input / Pull-up |
+| PA2 | UART TX | LPUART1_TX / AF12 |
+| PA3 | UART RX | LPUART1_RX / AF12 |
+| GND | 共地 | GND |
+
+### 接線說明
+
+**主 LED：**
+
+PC8 → 330Ω 電阻 → LED 正極，LED 負極接 GND。
+
+**呼吸 LED：**
+
+PC6 → 330Ω 電阻 → LED 正極，LED 負極接 GND。
+
+**有源蜂鳴器：**
+
+PB1 使用 GPIO 輸出控制蜂鳴器。
+
+目前採用不加電晶體的配置，但蜂鳴器必須符合 STM32 3.3V GPIO 的額定輸出電流及電壓規格，否則不可直接連接。
+
+**緊急停止：**
+
+PC13 使用開發板內建 B1 按鈕。
+
+**玩家按鈕：**
+
+PB0 與 PC7 使用 Pull-up 輸入，按下時連接 GND。目前尚未加入額外控制邏輯。
+
+## 6. 建置與執行：開發環境、燒錄步驟、終端機與命令
+
+### 開發環境
 
 | 項目 | 使用工具 |
 |---|---|
 | 開發板 | STM32 NUCLEO-G474RE |
 | 微控制器 | STM32G474RET6 |
-| 開發環境 | STM32CubeIDE |
-| 硬體設定 | STM32CubeMX |
+| STM32 IDE | STM32CubeIDE |
 | STM32 程式語言 | C |
 | 函式庫 | STM32 HAL |
-| 電腦端程式 | Python 3 |
-| UART 通訊套件 | pyserial |
-| 通訊介面 | LPUART1 |
-| 傳輸速率 | 115200 baud |
-| 版本控制 | GitHub |
-
----
-
-## 🔌 三、硬體腳位配置
-
-| MCU 腳位 | 功能 | CubeMX 設定 |
-|---|---|---|
-| PC8 | 主 LED 閃爍 | GPIO_Output |
-| PC6 | PWM 呼吸 LED | TIM3_CH1 / AF2 |
-| PB1 | 有源蜂鳴器控制 | GPIO_Output |
-| PC13 | 緊急停止按鈕 | GPIO_EXTI13 |
-| PB0 | 玩家 1 按鈕 | GPIO_Input / Pull-up |
-| PC7 | 玩家 2 按鈕 | GPIO_Input / Pull-up |
-| PA2 | UART TX | LPUART1_TX / AF12 |
-| PA3 | UART RX | LPUART1_RX / AF12 |
-
-### 硬體接線
-
-**主 LED（PC8）**
-
-PC8 → 330Ω 電阻 → LED 正極，LED 負極接 GND。
-
-**呼吸 LED（PC6）**
-
-PC6 → 330Ω 電阻 → LED 正極，LED 負極接 GND。
-
-**蜂鳴器（PB1）**
-
-使用 PB1 GPIO 控制有源蜂鳴器。
-
-本專題採用不額外加裝電晶體的配置，但必須確認蜂鳴器額定電壓與工作電流符合 STM32 GPIO 的輸出規格，否則不可直接連接。
-
-**緊急停止按鈕（PC13）**
-
-使用 NUCLEO 開發板內建 B1 按鈕，以 EXTI 中斷實現緊急停止。
-
-**玩家按鈕**
-
-- PB0：玩家 1 按鈕，按下連接 GND。
-- PC7：玩家 2 按鈕，按下連接 GND。
-
-目前兩個玩家按鈕保留為輸入功能，尚未加入額外的遊戲邏輯。
-
----
-
-## ⚙️ 四、系統主要功能
-
-### 1. 30 秒倒數計時
-
-系統啟動後立即開始倒數 30 秒。
-
-使用 `HAL_GetTick()` 計算經過時間：
-
-```c
-#define COUNTDOWN_MS 30000U
-
-start_ms = HAL_GetTick();
-
-if ((uint32_t)(HAL_GetTick() - start_ms) >= COUNTDOWN_MS) {
-    enter_failure("FAILED: TIMEOUT\r\n");
-}
-```
-
-倒數過程中，STM32 每秒透過 UART 傳送剩餘時間到 Python。
-
-### 2. 主 LED 閃爍
-
-PC8 LED 會隨著錯誤密碼次數增加而加快閃爍速度。
-
-| 錯誤次數 | LED 翻轉間隔 |
-|---|---|
-| 0 次 | 500ms |
-| 1 次 | 400ms |
-| 2 次 | 300ms |
-| 3 次 | 200ms |
-| 4 次 | 100ms |
-| 5 次 | 恆亮，進入失敗狀態 |
-
-### 3. PWM 呼吸燈
-
-使用 TIM3_CH1 控制 PC6 LED，製作逐漸變亮、逐漸變暗的呼吸效果。
-
-PWM 設定：
-
-- PWM 頻率：1kHz
-- Prescaler：15
-- Auto Reload Register：999
-- 更新間隔：20ms
-- 最低亮度：5%
-- 初始最高亮度：20%
-
-呼吸燈最大亮度隨錯誤次數提高：
-
-| 錯誤次數 | 最大亮度 |
-|---|---|
-| 0 次 | 20% |
-| 1 次 | 40% |
-| 2 次 | 60% |
-| 3 次 | 80% |
-| 4 次 | 100% |
-| 5 次 | 固定 100% |
-
-### 4. UART 密碼驗證
-
-STM32 使用 LPUART1 與電腦上的 Python 程式通訊。
-
-通訊設定：
-
-- Baud Rate：115200
-- Data Bits：8
-- Stop Bits：1
-- Parity：None
-- Hardware Flow Control：None
-
-正確密碼：
-
-```text
-1234
-```
-
-輸入正確密碼後：
-
-1. 停止 30 秒倒數。
-2. 關閉 PC8 主 LED。
-3. 關閉 PC6 呼吸 LED。
-4. 關閉 PB1 蜂鳴器。
-5. 顯示解除成功訊息。
-
-輸入錯誤密碼後：
-
-1. 錯誤次數增加 1。
-2. 主 LED 閃爍速度加快。
-3. 呼吸燈最大亮度提高。
-4. 回傳錯誤次數到 Python。
-
-### 5. 失敗鎖定與蜂鳴器
-
-符合以下任一條件時，系統進入失敗狀態：
-
-- 30 秒倒數結束。
-- 錯誤密碼累積 5 次。
-
-進入失敗狀態後：
-
-- PC8 LED 保持恆亮。
-- PC6 LED 保持 100% 亮度。
-- PB1 蜂鳴器連續響 2 秒。
-- 2 秒後蜂鳴器自動停止。
-- LED 持續亮起。
-- 無法再使用密碼解除警報。
-
-蜂鳴器採用非阻塞方式計時：
-
-```c
-#define BUZZER_MS 2000U
-
-buzzer_start_ms = HAL_GetTick();
-buzzer_active = 1;
-
-HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
-```
-
-計時結束時關閉：
-
-```c
-if (app_state == STATE_FAILED && buzzer_active &&
-    (uint32_t)(HAL_GetTick() - buzzer_start_ms) >= BUZZER_MS) {
-
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
-    buzzer_active = 0;
-}
-```
-
-使用 `HAL_GetTick()` 而不是 `HAL_Delay(2000)`，避免阻塞主程式及影響緊急停止功能。
-
-### 6. PC13 緊急停止
-
-PC13 使用 EXTI 外部中斷。
-
-按下板載 B1 按鈕時：
-
-- 立即停止倒數。
-- 關閉全部 LED。
-- 關閉蜂鳴器。
-- 系統進入停止狀態。
-
-停止後需要重新啟動開發板，才會再次開始 30 秒倒數。
-
----
-
-## 💻 五、Python 控制程式
-
-電腦端使用 Python 與 pyserial 進行 UART 通訊。
-
-功能包含：
-
-1. 自動搜尋可用 COM 埠。
-2. 讓使用者選擇連線埠。
-3. 預設 COM3。
-4. 顯示 STM32 傳回的倒數時間。
-5. 顯示錯誤密碼次數。
-6. 接收使用者輸入的密碼。
-7. 將密碼傳送給 STM32。
-
-### 安裝 pyserial
-
-在 PyCharm Terminal 輸入：
-
-```bash
-python -m pip install pyserial
-```
-
-如果使用 PyCharm 的 `.venv` 虛擬環境，必須確認套件安裝在執行程式的相同 Python 環境中。
-
-### 執行 Python
-
-```bash
-python main.py
-```
-
-### 執行畫面範例
-
-```text
-===== STM32 LED 警報解除模擬 =====
-
-可用 COM 埠：
-COM3：STLink Virtual COM Port
-
-請輸入 COM 埠（直接 Enter 使用 COM3）：
-
-已連接 COM3
-
-TIME=30s, ERRORS=0/5
-TIME=29s, ERRORS=0/5
-TIME=28s, ERRORS=0/5
-
-請輸入密碼：1111
-WRONG: 1/5
-
-請輸入密碼：2222
-WRONG: 2/5
-
-請輸入密碼：1234
-SUCCESS: DISARMED
-```
-
-以上為操作示意，實際顯示內容以程式版本及 STM32 回傳訊息為準。
-
----
-
-## 🔧 六、STM32CubeMX 設定
-
-### System Clock
-
-使用 HSI 內部時脈。
+| 電腦端 | Python 3 |
+| Python 編輯器 | PyCharm |
+| 通訊套件 | pyserial |
+| UART | LPUART1 |
+| 通訊速率 | 115200 8N1 |
+
+### STM32CubeMX 設定
+
+**系統時脈**
 
 - HSI：16MHz
 - PLL：Disabled
 - SYSCLK：16MHz
-- AHB：16MHz
-- APB1：16MHz
-- APB2：16MHz
 
-### GPIO
+**TIM3 PWM**
 
-- PC8：GPIO Output / Push Pull
-- PB1：GPIO Output / Push Pull
-- PB0：GPIO Input / Pull-up
-- PC7：GPIO Input / Pull-up
-- PC13：GPIO EXTI / Rising Edge
-- PC6：TIM3_CH1 / AF2
+- Channel：TIM3_CH1
+- Prescaler：15
+- Counter Period：999
+- PWM Frequency：1kHz
+- Duty 更新時間：20ms
 
-### TIM3 PWM
+**LPUART1**
 
+- TX：PA2
+- RX：PA3
+- Baud Rate：115200
+- Data Bits：8
+- Parity：None
+- Stop Bits：1
+
+**中斷設定**
+
+- EXTI15_10：PC13 緊急停止
+- LPUART1：UART 接收
+
+注意不要在 `main.c` 與 `stm32g4xx_it.c` 同時定義相同的中斷函式。
+
+### 燒錄步驟
+
+1. 開啟 STM32CubeIDE。
+2. 載入專題。
+3. 確認 CubeMX 腳位設定。
+4. 執行 Build 編譯。
+5. 使用 ST-LINK USB 連接開發板。
+6. 執行 Run 或 Debug 燒錄程式。
+
+### Python 設定
+
+在 PyCharm Terminal 安裝：
+
+`python -m pip install pyserial`
+
+執行程式：
+
+`python main.py`
+
+Python 啟動後會列出可使用的 COM 埠，使用者選擇正確埠號（預設 COM3）。
+
+接著按下 STM32 RESET，重新開始完整倒數。
+
+終端機可顯示：
+
+- `TIME`：剩餘秒數
+- `ERRORS`：密碼錯誤次數
+- `WRONG`：輸入錯誤
+- `SUCCESS`：成功解除
+- `FAILED`：警報失敗鎖定
+
+## 7. 程式結構：哪個檔案做什麼、ISR 與主迴圈分工
+
+### STM32 主程式
+
+| 程式名稱 | 功能 |
+|---|---|
+| `main.c` | 系統主程式與初始化 |
+| `MX_GPIO_Init()` | 初始化 GPIO |
+| `MX_TIM3_Init()` | 初始化 PWM |
+| `MX_LPUART1_UART_Init()` | 初始化 UART |
+| `SystemClock_Config()` | 系統時脈設定 |
+| `handle_password()` | 密碼判斷 |
+| `enter_failure()` | 進入失敗鎖定 |
+| `outputs_off()` | 關閉全部輸出 |
+| `HAL_GPIO_EXTI_Callback()` | PC13 緊急停止 |
+| `HAL_UART_RxCpltCallback()` | UART 接收中斷 |
+
+### ISR 與主迴圈分工
+
+**ISR（Interrupt Service Routine）**
+
+負責即時事件處理：
+
+- PC13 緊急停止。
+- UART 接收資料。
+- 設定接收完成標誌。
+
+**Main Loop（主迴圈）**
+
+負責持續執行：
+
+- 30 秒倒數。
+- 密碼判斷。
+- LED 閃爍。
+- PWM 呼吸燈。
+- 蜂鳴器 2 秒計時。
+- UART 狀態回報。
+
+使用非阻塞式控制，讓多個功能能夠同時運作。
+
+### Python 程式
+
+`main.py` 負責：
+
+1. 搜尋 COM 埠。
+2. 與 STM32 建立 UART 連線。
+3. 接收 STM32 訊息。
+4. 讀取使用者輸入的密碼。
+5. 傳送密碼給 STM32。
+
+## 8. 實作照片：每張附一行圖說
+
+### 圖 1：STM32 開發板與硬體設備
+
+![STM32 開發板](docs/board.jpg)
+
+圖說：NUCLEO-G474RE 開發板連接 LED、蜂鳴器與玩家按鈕。
+
+### 圖 2：硬體接線
+
+![硬體接線](docs/wiring.jpg)
+
+圖說：PC8、PC6、PB1 與按鈕的實際接線方式。
+
+### 圖 3：Python 執行畫面
+
+![Python 終端機](docs/terminal.jpg)
+
+圖說：Python 命令列顯示倒數時間、錯誤次數及密碼輸入結果。
+
+**注意：** 需要先將照片上傳到 GitHub Repository 的 `docs` 資料夾，並使用上述檔名，圖片才會正常顯示。
+
+## 9. AI 使用說明：哪裡請 AI、怎麼查核
+
+### 使用 AI 協助的部分
+
+本專題使用 ChatGPT 協助：
+
+1. 整理 STM32 專題需求。
+2. 產生 C 語言程式草稿。
+3. 撰寫 Python UART 通訊程式。
+4. 說明 STM32CubeMX 設定。
+5. 解釋 PWM、UART、EXTI 及 HAL 計時原理。
+6. 分析蜂鳴器計時異常。
+7. 撰寫程式中文註解。
+8. 整理 README 文件。
+
+### 查核方式
+
+程式及 AI 建議需要經過下列方式確認：
+
+- 透過 STM32CubeMX 檢查腳位。
+- 使用 STM32CubeIDE 編譯。
+- 比較 UART 傳送與接收結果。
+- 實際觀察 LED 與蜂鳴器。
+- 測試 30 秒與 2 秒計時功能。
+- 檢查 PC13 中斷是否正常。
+
+### 發現並修正的問題
+
+測試過程曾發現：
+
+**30 秒倒數結束後，蜂鳴器可以正常響 2 秒，但錯誤密碼累積 5 次時，蜂鳴器只短暫響一聲。**
+
+後續檢查程式，發現可能是主迴圈使用較早讀取的時間值，導致蜂鳴器計時判斷提前成立。
+
+因此將蜂鳴器結束判斷改為重新取得 `HAL_GetTick()`，避免使用過期的時間值。
+
+修正後仍需要實際燒錄與重新測試，才能確認問題完全排除。
+
+## 10. 已知限制：哪些用替身、換真實要改哪裡
+
+### 1. 使用模擬警報設備
+
+本系統使用 LED 和蜂鳴器模擬警報，沒有真實危險裝置。
+
+### 2. 倒數顯示依賴電腦
+
+目前倒數時間主要透過 Python 顯示，沒有額外 LCD 或 OLED。
+
+未來可增加顯示器，使系統不需要電腦也能顯示倒數。
+
+### 3. 玩家按鈕尚未加入互動
+
+PB0、PC7 已經預留為玩家按鈕。
+
+未來可以設計雙人合作解除警報的功能。
+
+### 4. 蜂鳴器驅動限制
+
+目前使用 PB1 GPIO 控制有源蜂鳴器，適用於符合 MCU GPIO 電氣規格的低電流元件。
+
+如果更換成高電流蜂鳴器，需要修改驅動電路。
+
+### 5. 尚待完成的測試
+
+五次錯誤密碼的蜂鳴器 2 秒計時、PC13 緊急停止反應，以及所有狀態切換仍需完整驗收。
+
+### 6. 密碼與通訊安全
+
+本專題使用示範密碼與 UART 通訊，沒有加密或身分認證機制，因此不適合用於真實保全設備。
+
+---
+
+**專題名稱：** STM32 30 秒警報解除模擬系統
+
+**開發平台：** NUCLEO-G474RE
+
+**程式語言：** C、Python
+
+**開發工具：** STM32CubeIDE、PyCharm
+
+**主要技術：** GPIO、EXTI、TIM3 PWM、LPUART1、HAL_GetTick()
 - Clock Source：Internal Clock
 - Channel 1：PWM Generation CH1
 - Prescaler：15
