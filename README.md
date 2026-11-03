@@ -81,7 +81,7 @@
 
 **TIM3 PWM：** 控制呼吸 LED 亮度，實現平滑的呼吸效果。
 
-**LPUART1：** 建立 STM32 與 Python 之間的雙向通訊。
+**USART2：** 建立 STM32 與 Python 之間的雙向通訊。
 
 **HAL_GetTick()：** 實作 30 秒倒數、LED 閃爍及蜂鳴器 2 秒計時，避免阻塞主迴圈。
 
