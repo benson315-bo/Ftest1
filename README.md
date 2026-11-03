@@ -93,8 +93,6 @@
 | PC6 | 呼吸 LED | TIM3_CH1 / AF2 |
 | PB1 | 有源蜂鳴器 | GPIO_Output |
 | PC13 | 緊急停止 | GPIO_EXTI13 |
-| PB0 | 玩家 1 按鈕 | GPIO_Input / Pull-up |
-| PC7 | 玩家 2 按鈕 | GPIO_Input / Pull-up |
 | PA2 | UART TX | LPUART1_TX / AF12 |
 | PA3 | UART RX | LPUART1_RX / AF12 |
 | GND | 共地 | GND |
@@ -118,10 +116,6 @@ PB1 使用 GPIO 輸出控制蜂鳴器。
 **緊急停止：**
 
 PC13 使用開發板內建 B1 按鈕。
-
-**玩家按鈕：**
-
-PB0 與 PC7 使用 Pull-up 輸入，按下時連接 GND。目前尚未加入額外控制邏輯。
 
 ## 6. 建置與執行：開發環境、燒錄步驟、終端機與命令
 
@@ -156,7 +150,7 @@ PB0 與 PC7 使用 Pull-up 輸入，按下時連接 GND。目前尚未加入額�
 - PWM Frequency：1kHz
 - Duty 更新時間：20ms
 
-**LPUART1**
+**USART2**
 
 - TX：PA2
 - RX：PA3
